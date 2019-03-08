@@ -46,7 +46,7 @@ def test_overlap_overlaps_same_origin_z():
 
 
 def test_overlap_contains():
-    with pytest.raises(FeasibilityException, match=r'.* doppelt vergeben.'):
+    with pytest.raises(FeasibilityException, match=r'.* überschneiden .'):
         tasks = import_tasks_default(["1,EuroPallet1,2,10,10,10,1,1,1"])
         solution_contains = import_solution_default(["1,0,0,0,0", "1,0,0,0,0"], tasks)
         validate_solution(solution_contains, tasks)
@@ -54,8 +54,8 @@ def test_overlap_contains():
 
 def test_pallets():
     tasks = import_tasks_default(["1,EuroPallet1,2,10,10,10,1,1,1"])
-    solution_contains = import_solution_default(["1,0,0,0,0", "1,0,0,0,0"], tasks)
-    assert solution_contains[0] == solution_contains[1]
+    same_pallets = import_solution_default(["1,0,0,0,0", "1,0,0,0,0"], tasks)
+    assert same_pallets[0] != same_pallets[1]
 
 
 def test_stack_right():
@@ -63,6 +63,7 @@ def test_stack_right():
     solution_contains = import_solution_default(["1,0,0,0,0", "1,0,0,10,0"], tasks)
     validate_solution(solution_contains, tasks)
     assert len(solution_contains) == 2
+
 
 def test_stack_wrong():
     tasks = import_tasks_default(["1,EuroPallet1,2,10,10,10,1,1,1"])

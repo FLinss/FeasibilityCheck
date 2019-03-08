@@ -61,6 +61,17 @@ class SolutionPallet(AbstractPallet):
             raise FeasibilityException(
                 "Die Palette im Startpunkt %s besitzt falsche Dimensionen." % self.origin_point.coords[:])
 
+    def check_overlap_in_height(self, other_pallet):
+        return self.origin_point.z + self.height > other_pallet.origin_point.z
+
+    def check_overlap_by_other_pallet(self, other_pallet):
+        if self != other_pallet and (self.base_area.overlaps(other_pallet.base_area) or
+                                     self.base_area.contains(other_pallet.base_area)) \
+                and self.check_overlap_in_height(other_pallet) \
+                and other_pallet.check_overlap_in_height(self):
+            return True
+        return False
+
 
 def main():
     try:
@@ -131,22 +142,11 @@ def check_dimensions(solution_pallets, tasks):
 
 
 def check_overlap(solution_pallets):
-    # origin_points = [item.origin_point for item in solution_pallets]
-    # checked_origin_points = []
-    # for point in origin_points:
-    #     if point in checked_origin_points:
-    #         raise FeasibilityException("Der Startpunkt %s ist doppelt vergeben." % point.coords[:])
-    #     else:
-    #         checked_origin_points.append(point)
-
     for pallet in solution_pallets:
         for other_pallet in solution_pallets:
-            if pallet != other_pallet and (pallet.base_area.overlaps(other_pallet.base_area) or
-                                           pallet.base_area.contains(other_pallet.base_area)) \
-                    and pallet.origin_point.z + pallet.height > other_pallet.origin_point.z \
-                    and other_pallet.origin_point.z + other_pallet.height > pallet.origin_point.z:
-                raise FeasibilityException("Die Paletten in Startpunkt %s und %s überschneiden sich." % (
-                    pallet.origin_point.coords[:], other_pallet.origin_point.coords[:]))
+            if pallet.check_overlap_by_other_pallet(other_pallet):
+                raise FeasibilityException("Die Paletten in Startpunkt %s und %s überschneiden sich." %
+                                           (pallet.origin_point.coords[:], other_pallet.origin_point.coords[:]))
 
 
 if __name__ == '__main__':
