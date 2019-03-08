@@ -1,0 +1,7 @@
+*.pyc
+.idea
+*.spec
+venv
+dist
+build
+*.whl
