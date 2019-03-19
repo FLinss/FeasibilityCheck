@@ -1,6 +1,7 @@
 import argparse
 import csv
 from shapely.geometry import Point, box
+from shapely.ops import cascaded_union
 
 
 class FeasibilityException(Exception):
@@ -8,8 +9,7 @@ class FeasibilityException(Exception):
 
 
 class AbstractPallet:
-    def __init__(self, type_id, length, width, height):
-        self.type_id = type_id
+    def __init__(self, length, width, height):
         self.length = length
         self.width = width
         self.height = height
@@ -23,7 +23,8 @@ class PalletType(AbstractPallet):
         self.turning_allowed = turning_allowed
         self.stacking_allowed = stacking_allowed
         self.order = order
-        super(PalletType, self).__init__(type_id, length, width, height)
+        self.id = type_id
+        super(PalletType, self).__init__(length, width, height)
 
 
 class SolutionPallet(AbstractPallet):
@@ -32,30 +33,44 @@ class SolutionPallet(AbstractPallet):
         width = pallet_type.length if h_turned else pallet_type.width
         self.origin_point = Point(x_pos, y_pos, z_pos)
         self.base_area = box(x_pos, y_pos, x_pos + length, y_pos + width)
-        super(SolutionPallet, self).__init__(pallet_type, length, width, pallet_type.height)
+        self.type = pallet_type
+        super(SolutionPallet, self).__init__(length, width, pallet_type.height)
 
     def validate_rotation(self):
-        if self.length == self.type_id.width and self.width == self.type_id.length:
-            if self.type_id.turning_allowed:
+        if self.length == self.type.width and self.width == self.type.length:
+            if self.type.turning_allowed:
                 return True
             else:
                 raise FeasibilityException(
                     "Die Palette im Startpunkt %s wurde unzulässigerweise gedreht." % self.origin_point.coords[:])
         return False
 
+    def validate_stacking(self):
+        return self.type.stacking_allowed
+
     def validate_length(self):
-        return self.length == self.type_id.length
+        return self.length == self.type.length
+
+    def get_maxx(self):
+        """
+        Get the maximum x value from the base area
+     :return:
+        """
+        return self.base_area.bounds[2]
+
+    def get_maxz(self):
+        return self.origin_point.z + self.height
 
     def validate_width(self):
-        return self.width == self.type_id.width
+        return self.width == self.type.width
 
     def check_extend_width(self, width_value):
         return self.origin_point.z + self.width > width_value
 
-    def validate_height(self,):
-        return self.height == self.type_id.height
+    def validate_height(self, ):
+        return self.height == self.type.height
 
-    def check_extend_height(self, height_value):
+    def extends_height(self, height_value):
         return self.origin_point.z + self.height > height_value
 
     def validate_dimension(self):
@@ -67,17 +82,20 @@ class SolutionPallet(AbstractPallet):
             raise FeasibilityException(
                 "Die Palette im Startpunkt %s besitzt falsche Dimensionen." % self.origin_point.coords[:])
 
-    def check_overlaping_floor_area_with_other_pallet(self, other_pallet):
+    def overlaps_area(self, other_pallet):
         if self != other_pallet and (self.base_area.overlaps(other_pallet.base_area) or
                                      self.base_area.contains(other_pallet.base_area)):
             return True
         return False
 
-    def check_overlaping_heights(self, other_pallet):
-        if self.check_extend_height(other_pallet.origin_point.z) and other_pallet.check_extend_height(
-                self.origin_point.z):
-            return True
-        return False
+    def overlaps_height(self, other_pallet):
+        """
+        Method checks only, if the other pallet overlaps from above
+     :param other_pallet: SolutionPallet
+     :return: True, if the other pallet overlaps
+        """
+        diff = other_pallet.origin_point.z - self.origin_point.z
+        return 0 <= diff < self.height
 
 
 def main():
@@ -94,6 +112,7 @@ def main():
         solution_pallets = import_solution_by_file(args.loesung, tasks)
         validate_solution(solution_pallets, tasks, args.breite, args.hoehe)
         print("Die Lösung ist zulässig.")
+        print("Die minimale Länge beträgt: %s" % calculate_minimal_container_length(solution_pallets))
     except FeasibilityException as e:
         print(e)
 
@@ -135,14 +154,14 @@ def validate_solution(solution_pallets, tasks, height_value, width_value):
     check_count(solution_pallets, tasks)
     check_dimensions(solution_pallets)
     check_container_dimensions(solution_pallets, height_value, width_value)
-    check_overlap(solution_pallets)
+    check_stacking(solution_pallets)
     check_lifo(solution_pallets)
 
 
 def check_count(solution_pallets, tasks):
     for key in tasks:
-        # TODO: item.type_id.type_id ungünstig
-        used_pallets = len([i for i in filter(lambda item: item.type_id.type_id == tasks[key].type_id, solution_pallets)])
+        used_pallets = len([i for i in filter(lambda item: item.type.id == tasks[key].id,
+                                              solution_pallets)])
         if tasks[key].quantity != used_pallets:
             raise FeasibilityException(
                 "Die Anzahl der Paletten von %s, Order %s beträgt %s. Es ist jedoch die Anzahl %s gefordert." % (
@@ -156,24 +175,36 @@ def check_dimensions(solution_pallets):
 
 def check_container_dimensions(solution_pallets, width_value, height_value):
     for pallet in solution_pallets:
-        if pallet.check_extend_width(width_value) or pallet.check_extend_height(height_value):
+        if pallet.check_extend_width(width_value) or pallet.extends_height(height_value):
             raise FeasibilityException("Die Palette im Startpunkt %s überschreitet die Container Dimensionen."
                                        % pallet.origin_point.coords[:])
 
 
-# TODO: Refactor: Eher Stacking Funktion und overlap wird nur bei Höhen aufgerufen.
-def check_overlap(solution_pallets):
+def check_stacking(solution_pallets):
     for pallet in solution_pallets:
-        for other_pallet in solution_pallets:
-            if pallet.check_overlaping_floor_area_with_other_pallet(other_pallet):
-                if pallet.check_overlaping_heights(other_pallet):
-                    raise FeasibilityException("Die Paletten in Startpunkt %s und %s überschneiden sich." %
-                                               (pallet.origin_point.coords[:], other_pallet.origin_point.coords[:]))
-                # TODO: Überprüfung auf korrektes Stacking
+        pallets_same_floor_area = [i for i in filter(
+            lambda item: pallet.overlaps_area(item), solution_pallets)]
+        for other_pallet in pallets_same_floor_area:
+            if pallet.overlaps_height(other_pallet):
+                raise FeasibilityException("Die Paletten in Startpunkt %s und %s überschneiden sich." %
+                                           (pallet.origin_point.coords[:], other_pallet.origin_point.coords[:]))
+        if pallet.origin_point.z > 0:
+            if not pallet.validate_stacking():
+                raise FeasibilityException("Die Palette in Startpunkt %s wurde unzulässigerweise gestapelt." %
+                                           pallet.origin_point.coords[:])
+            area_for_stack = [i.base_area for i in filter(lambda item: pallet.origin_point.z == item.get_maxz(),
+                                                          pallets_same_floor_area)]
+            if not cascaded_union(area_for_stack).contains(pallet.base_area):
+                raise FeasibilityException("Die Palette in Startpunkt %s wurde falsch gestapelt." %
+                                           pallet.origin_point.coords[:])
 
 
 def check_lifo(solution_pallets):
-    pass
+    pass  # TODO: lifo einbinden
+
+
+def calculate_minimal_container_length(solution_pallets):
+    return max([i.get_maxx() for i in solution_pallets])
 
 
 if __name__ == '__main__':

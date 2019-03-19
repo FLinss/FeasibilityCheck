@@ -72,13 +72,41 @@ def test_check_touch_container():
 
 def test_stack_right():
     tasks = import_tasks_default(["1,EuroPallet1,2,10,10,10,1,1,1"])
-    solution_contains = import_solution_default(["1,0,0,0,0", "1,0,0,10,0"], tasks)
-    validate_solution_default(solution_contains, tasks)
-    assert len(solution_contains) == 2
+    solution = import_solution_default(["1,0,0,0,0", "1,0,0,10,0"], tasks)
+    validate_solution_default(solution, tasks)
+    assert len(solution) == 2
 
 
-def test_stack_wrong():
-    tasks = import_tasks_default(["1,EuroPallet1,2,10,10,10,1,1,1"])
-    solution_contains = import_solution_default(["1,0,0,0,0", "1,0,0,15,0"], tasks)
-    validate_solution_default(solution_contains, tasks)
-    assert len(solution_contains) == 2
+def test_stack_not_allowed():
+    with pytest.raises(FeasibilityException, match=r'.* unzulässigerweise gestapelt.'):
+        tasks = import_tasks_default(["1,EuroPallet1,2,10,10,10,1,0,1"])
+        solution = import_solution_default(["1,0,0,0,0", "1,0,0,15,0"], tasks)
+        validate_solution_default(solution, tasks)
+
+
+def test_stack_hover():
+    with pytest.raises(FeasibilityException, match=r'.* falsch gestapelt.'):
+        tasks = import_tasks_default(["1,EuroPallet1,2,10,10,10,1,1,1"])
+        solution = import_solution_default(["1,0,0,0,0", "1,0,0,15,0"], tasks)
+        validate_solution_default(solution, tasks)
+
+
+def test_overhang():
+    with pytest.raises(FeasibilityException, match=r'.* falsch gestapelt.'):
+        tasks = import_tasks_default(["1,EuroPallet1,2,10,10,10,1,1,1"])
+        solution = import_solution_default(["1,0,0,0,0", "1,1,0,10,0"], tasks)
+        validate_solution_default(solution, tasks)
+
+
+def test_multiple_stack():  # 1. Layer: 2 Pallets Type 1 / 2. Layer: 1 Pallet Type 2 / 3. Layer: 1 Pallet Type 2
+    tasks = import_tasks_default(["1,EuroPallet1,2,10,10,10,1,1,1", "2,EuroPallet2,2,10,20,10,1,1,1"])
+    solution = import_solution_default(["1,0,0,0,0", "1,0,10,0,0", "2,0,0,10,0", "2,0,0,20,0"], tasks)
+    validate_solution_default(solution, tasks)
+    assert len(solution) == 4
+
+
+def test_wrong_multiple_stack():  # Gap under Type 2
+    with pytest.raises(FeasibilityException, match=r'.* falsch gestapelt.'):
+        tasks = import_tasks_default(["1,EuroPallet1,2,10,10,10,1,1,1", "2,EuroPallet2,1,10,30,10,1,1,1"])
+        solution = import_solution_default(["1,0,0,0,0", "1,0,20,0,0", "2,0,0,10,0"], tasks)
+        validate_solution_default(solution, tasks)

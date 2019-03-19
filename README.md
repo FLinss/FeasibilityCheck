@@ -1,3 +1,3 @@
 # FeasibilityCheck
 
-# shapely muss installiert werden
+- shapely muss installiert werden
