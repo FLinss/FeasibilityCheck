@@ -217,13 +217,12 @@ def check_lifo(solution_pallets):
                                        (current_order, min_order))
         # Sind Paletten zugänglich?
         for pallet in pallets_max_z:
-            pallets_same_area = [i for i in filter(lambda item: item.overlaps_area(pallet), pallets_max_z)]
-            for other_pallet in pallets_same_area:
+            for other_pallet in pallets_max_z:
                 if pallet.is_other_pallet_stacked(other_pallet):
                     raise FeasibilityException("Palette im Punkt %s vom Typ %s ist nicht gemäß lifo zugänglich." %
                                                (pallet.origin_point.z, pallet.type.id))
             pallets_to_unload.remove(pallet)
-        current_order = min_order if min_order > current_order else current_order
+        current_order = min_order
 
 
 def calculate_minimal_container_length(solution_pallets):
