@@ -54,7 +54,7 @@ class SolutionPallet(AbstractPallet):
     def get_maxx(self):
         """
         Get the maximum x value from the base area
-   :return:
+        :return:
         """
         return self.base_area.bounds[2]
 
@@ -83,16 +83,14 @@ class SolutionPallet(AbstractPallet):
                 "Die Palette im Startpunkt %s besitzt falsche Dimensionen." % self.origin_point.coords[:])
 
     def overlaps_area(self, other_pallet):
-        if self != other_pallet and (self.base_area.overlaps(other_pallet.base_area) or
-                                     self.base_area.contains(other_pallet.base_area)):
-            return True
-        return False
+        return self != other_pallet and (
+                self.base_area.overlaps(other_pallet.base_area) or self.base_area.contains(other_pallet.base_area))
 
     def overlaps_height(self, other_pallet):
         """
         Method checks only, if the other pallet overlaps from above
-   :param other_pallet: SolutionPallet
-   :return: True, if the other pallet overlaps
+        :param other_pallet: SolutionPallet
+        :return: True, if the other pallet overlaps
         """
         diff = other_pallet.origin_point.z - self.origin_point.z
         return 0 <= diff < self.height
