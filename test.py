@@ -113,23 +113,32 @@ def test_wrong_multiple_stack():  # Gap under Type 2 / between both Type 1
 
 
 def test_wrong_lifo_one_layer():
-    with pytest.raises(FeasibilityException, match=r'.* verdecken *'):
+    with pytest.raises(FeasibilityException, match=r'.* verdeckt.'):
         tasks = import_tasks_default(["1,EuroPallet1,1,10,15,10,1,1,1", "2,EuroPallet2,1,10,15,10,1,1,2"])
         solution = import_solution_default(["1,0,0,0,0", "2,10,0,0,0,0"], tasks)
         validate_solution_default(solution, tasks)
 
 
-def test_right_lifo_one_layer1():
+def test_right_lifo_one_layer1():  # 3 pallets, First large pallet order 2, Second two small pallets order 1/2
     tasks = import_tasks_default(["1,EuroPallet1,1,10,30,10,1,1,2",
-                                  "2,EuroPallet2,1,10,15,10,1,1,1", "3,EuroPallet2,1,10,15,10,1,1,1"])
+                                  "2,EuroPallet2,1,10,15,10,1,1,2", "3,EuroPallet2,1,10,15,10,1,1,1"])
     solution = import_solution_default(["1,0,0,0,0", "2,10,0,0,0", "3,10,15,0,0,0"], tasks)
     validate_solution_default(solution, tasks)
     assert len(solution) == 3
 
 
-def test_right_lifo_one_layer2():
+def test_right_lifo_one_layer2():  # 2 pallets, different order, different length
     tasks = import_tasks_default(["1,EuroPallet1,1,10,30,10,1,1,1",
                                   "2,EuroPallet2,1,20,15,10,1,1,2"])
     solution = import_solution_default(["1,0,0,0,0", "2,0,30,0,0"], tasks)
     validate_solution_default(solution, tasks)
     assert len(solution) == 2
+
+
+def test_right_lifo_two_layers():
+    tasks = import_tasks_default(["1,EuroPallet1,1,10,30,10,1,1,1",
+                                  "2,EuroPallet2,1,20,50,10,1,1,2"])
+    solution = import_solution_default(["1,10,0,10,0", "2,0,0,0,0"], tasks)
+    validate_solution_default(solution, tasks)
+    assert len(solution) == 2
+

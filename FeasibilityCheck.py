@@ -33,6 +33,7 @@ class SolutionPallet(AbstractPallet):
         width = pallet_type.length if h_turned else pallet_type.width
         self.origin_point = Point(x_pos, y_pos, z_pos)
         self.base_area = box(x_pos, y_pos, x_pos + length, y_pos + width)
+        self.front_face = box(y_pos, z_pos, y_pos + width, z_pos + pallet_type.height)
         self.type = pallet_type
         super(SolutionPallet, self).__init__(length, width, pallet_type.height)
 
@@ -84,7 +85,12 @@ class SolutionPallet(AbstractPallet):
 
     def overlaps_area(self, other_pallet):
         return self != other_pallet and (
-                self.base_area.overlaps(other_pallet.base_area) or self.base_area.contains(other_pallet.base_area))
+                self.base_area.overlaps(other_pallet.base_area) or
+                self.base_area.contains(other_pallet.base_area or other_pallet.base_area.contains(self.base_area)))
+
+    def overlaps_front_face(self, other_pallet):
+        return self != other_pallet and (
+                self.front_face.overlaps(other_pallet.front_face) or self.front_face.contains(other_pallet.front_face))
 
     def overlaps_height(self, other_pallet):
         """
@@ -96,7 +102,12 @@ class SolutionPallet(AbstractPallet):
         return 0 <= diff < self.height
 
     def is_other_pallet_stacked(self, other_pallet):
-        return self.overlaps_area(other_pallet) and self.get_maxz() == other_pallet.origin_point.z + other_pallet.height
+        return self.overlaps_base_area(other_pallet) and \
+               self.get_maxz() == other_pallet.origin_point.z + other_pallet.height
+
+    def is_other_pallet_in_front(self, other_pallet):
+        return self.overlaps_front_face(other_pallet) and \
+               self.get_maxx() <= other_pallet.origin_point.x
 
 
 def main():
@@ -203,26 +214,23 @@ def check_stacking(solution_pallets):
 
 
 def check_lifo(solution_pallets):
-    current_order = 1
     pallets_to_unload = solution_pallets.copy()
     while len(pallets_to_unload) > 0:
-        max_x = max([i.get_maxx() for i in pallets_to_unload])
-        pallets_max_x = [i for i in filter(lambda item: item.get_maxx() == max_x, pallets_to_unload)]
-        min_order = min([i.type.order for i in pallets_max_x])
-        pallets_min_order = [i for i in filter(lambda item: item.type.order == min_order, pallets_max_x)]
-        max_z = max([i.get_maxz() for i in pallets_min_order])
-        pallets_max_z = [i for i in filter(lambda item: item.get_maxz() == max_z, pallets_min_order)]
-        if current_order > min_order:  # TODO: Notwendig?
-            raise FeasibilityException("Paletten der Order %s verdecken Paletten der Order %s." %
-                                       (current_order, min_order))
-        # Sind Paletten zugänglich?
+        min_order = min([i.type.order for i in pallets_to_unload])
+        pallets_min_order = [i for i in filter(lambda item: item.type.order == min_order, pallets_to_unload)]
+        max_x = max([i.get_maxx() for i in pallets_min_order])
+        pallets_max_x = [i for i in filter(lambda item: item.get_maxx() == max_x, pallets_min_order)]
+        max_z = max([i.get_maxz() for i in pallets_max_x])
+        pallets_max_z = [i for i in filter(lambda item: item.get_maxz() == max_z, pallets_max_x)]
+        # Check for accessibility
         for pallet in pallets_max_z:
-            for other_pallet in pallets_max_z:
-                if pallet.is_other_pallet_stacked(other_pallet):
-                    raise FeasibilityException("Palette im Punkt %s vom Typ %s ist nicht gemäß lifo zugänglich." %
-                                               (pallet.origin_point.z, pallet.type.id))
+            for other_pallet in pallets_to_unload:
+                if pallet.is_other_pallet_stacked(other_pallet) or pallet.is_other_pallet_in_front(other_pallet):
+                    raise FeasibilityException(
+                        "Palette im Punkt %s vom Typ %s wird von der Palette %s vom Typ %s gemäß lifo verdeckt." %
+                        (pallet.origin_point.coords[:], pallet.type.id, other_pallet.origin_point.coords[:],
+                         other_pallet.type.id))
             pallets_to_unload.remove(pallet)
-        current_order = min_order
 
 
 def calculate_minimal_container_length(solution_pallets):
