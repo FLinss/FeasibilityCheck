@@ -89,7 +89,11 @@ class SolutionPallet(AbstractPallet):
 
     def overlaps_front_face(self, other_pallet):
         return self != other_pallet and (
-                self.front_face.overlaps(other_pallet.front_face) or self.front_face.contains(other_pallet.front_face))
+                self.front_face.overlaps(other_pallet.front_face) or
+                self.front_face.contains(other_pallet.front_face) or other_pallet.front_face.contains(self.front_face))
+
+    def touches_front_face(self, other_pallet):
+        return self != other_pallet and self.origin_point.y <= other_pallet.origin_point.y < self.origin_point.y + self.width
 
     def overlaps_height(self, other_pallet):
         """
@@ -105,8 +109,8 @@ class SolutionPallet(AbstractPallet):
                self.get_maxz() == other_pallet.origin_point.z + other_pallet.height
 
     def is_other_pallet_in_front(self, other_pallet):
-        return self.overlaps_front_face(other_pallet) and \
-               self.get_maxx() <= other_pallet.origin_point.x
+        return (self.overlaps_front_face(other_pallet) or self.touches_front_face(other_pallet))and \
+               self.get_maxx() < other_pallet.get_maxx()
 
 
 def main():

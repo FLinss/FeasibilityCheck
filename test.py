@@ -143,8 +143,10 @@ def test_right_lifo_two_layers():
     assert len(solution) == 2
 
 def test_wrong_lifo_two_layers():
-    tasks = import_tasks_default(["1,EuroPallet1,1,10,30,10,1,1,1",
+    with pytest.raises(FeasibilityException, match=r'.* lifo .'):
+        tasks = import_tasks_default(["1,EuroPallet1,1,10,30,10,1,1,1",
                                   "2,EuroPallet2,1,20,50,10,1,1,2"])
-    solution = import_solution_default(["1,0,0,10,0", "2,0,0,0,0"], tasks)
-    validate_solution_default(solution, tasks)
-    assert len(solution) == 2
+        solution = import_solution_default(["1,0,0,10,0", "2,0,0,0,0"], tasks)
+        validate_solution_default(solution, tasks)
+
+# TODO: Kombinierte Verdeckung überprüfen!
