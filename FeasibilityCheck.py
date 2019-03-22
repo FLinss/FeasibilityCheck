@@ -83,10 +83,9 @@ class SolutionPallet(AbstractPallet):
             raise FeasibilityException(
                 "Die Palette im Startpunkt %s besitzt falsche Dimensionen." % self.origin_point.coords[:])
 
-    def overlaps_area(self, other_pallet):
-        return self != other_pallet and (
-                self.base_area.overlaps(other_pallet.base_area) or
-                self.base_area.contains(other_pallet.base_area or other_pallet.base_area.contains(self.base_area)))
+    def overlaps_base_area(self, other_pallet):
+        return self != other_pallet and (self.base_area.overlaps(other_pallet.base_area) or self.base_area.contains(
+            other_pallet.base_area) or other_pallet.base_area.contains(self.base_area))
 
     def overlaps_front_face(self, other_pallet):
         return self != other_pallet and (
@@ -195,9 +194,9 @@ def check_container_dimensions(solution_pallets, width_value, height_value):
 
 def check_stacking(solution_pallets):
     for pallet in solution_pallets:
-        pallets_same_floor_area = [i for i in filter(
-            lambda item: pallet.overlaps_area(item), solution_pallets)]
-        for other_pallet in pallets_same_floor_area:
+        pallets_same_base_area = [i for i in filter(
+            lambda item: pallet.overlaps_base_area(item), solution_pallets)]
+        for other_pallet in pallets_same_base_area:
             if pallet.overlaps_height(other_pallet):
                 raise FeasibilityException("Die Paletten in Startpunkt %s Typ: %s und %s  Typ: %s überschneiden sich." %
                                            (pallet.origin_point.coords[:], pallet.type.id,
@@ -207,7 +206,7 @@ def check_stacking(solution_pallets):
                 raise FeasibilityException("Die Palette in Startpunkt %s vom Typ %s wurde unzulässigerweise gestapelt."
                                            % (pallet.origin_point.coords[:], pallet.type.id))
             area_for_stack = [i.base_area for i in filter(lambda item: pallet.origin_point.z == item.get_maxz(),
-                                                          pallets_same_floor_area)]
+                                                          pallets_same_base_area)]
             if not cascaded_union(area_for_stack).contains(pallet.base_area):
                 raise FeasibilityException("Die Palette in Startpunkt %s vom Typ %s wurde falsch gestapelt." %
                                            (pallet.origin_point.coords[:], pallet.type.id))
