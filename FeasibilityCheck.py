@@ -76,12 +76,10 @@ class SolutionPallet(AbstractPallet):
 
     def validate_dimension(self):
         if not self.validate_rotation():
-            if not self.validate_length() or not self.validate_width():
-                raise FeasibilityException(
-                    "Die Palette im Startpunkt %s besitzt falsche Dimensionen." % self.origin_point.coords[:])
-        if not self.validate_height():
-            raise FeasibilityException(
-                "Die Palette im Startpunkt %s besitzt falsche Dimensionen." % self.origin_point.coords[:])
+            if self.validate_length() and self.validate_width():
+                return self.validate_height()
+            return False
+        return self.validate_height()
 
     def overlaps_base_area(self, other_pallet):
         return self != other_pallet and (self.base_area.overlaps(other_pallet.base_area) or self.base_area.contains(
@@ -185,7 +183,9 @@ def check_count(solution_pallets, tasks):
 
 def check_dimensions(solution_pallets):
     for pallet in solution_pallets:
-        pallet.validate_dimension()
+        if not pallet.validate_dimension():
+            raise FeasibilityException("Die Palette im Startpunkt %s besitzt falsche Dimensionen." %
+                                       pallet.origin_point.coords[:])
 
 
 def check_container_dimensions(solution_pallets, width_value, height_value):
