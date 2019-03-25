@@ -38,6 +38,11 @@ class SolutionPallet(AbstractPallet):
         super(SolutionPallet, self).__init__(length, width, pallet_type.height)
 
     def validate_rotation(self):
+        """
+        Checks if the pallet was rotated and then if the rotation was allowed. Raises exception, in case of incorrect
+        rotation
+        :return: True, if the pallet is rotated and the rotation is allowed. Otherwise, false.
+        """
         if self.length == self.type.width and self.width == self.type.length:
             if self.type.turning_allowed:
                 return True
@@ -47,34 +52,69 @@ class SolutionPallet(AbstractPallet):
         return False
 
     def is_stackable(self):
+        """
+        Checks if the pallet is stackable.
+        :return: True, if the pallet is stackable
+        """
         return self.type.stacking_allowed
 
     def validate_length(self):
+        """
+        Checks, if the used pallet length is equal to the pallet type length
+        :return: True, if the pallet length is equal to the pallet type length
+        """
         return self.length == self.type.length
 
     def get_maxx(self):
         """
-        Get the maximum x value from the base area
-        :return:
+        Get the maximum x value from the pallet (here: base area)
+        :return: Maximal coordinate in x direction
         """
         return self.base_area.bounds[2]
 
     def get_maxz(self):
+        """
+        Get the maximum z value from the pallet
+        :return: Maximal coordinate in z direction
+        """
         return self.origin_point.z + self.height
 
     def validate_width(self):
+        """
+        Checks, if the used pallet width is equal to the pallet type width
+        :return: True, if the pallet width is equal to the pallet type width
+        """
         return self.width == self.type.width
 
     def extends_width(self, width_value):
+        """
+        Checks, if the pallet is wider than a specific value
+        :param width_value: integer value for a specific width
+        :return: True, if the pallet is wider than the specific value
+        """
         return self.origin_point.z + self.width > width_value
 
     def validate_height(self, ):
+        """
+        Checks, if the used pallet height is equal to the pallet type height
+        :return: True, if the pallet height is equal to the pallet type height
+        """
         return self.height == self.type.height
 
     def extends_height(self, height_value):
+        """
+        Checks, if the pallet is higher than a specific value
+        :param height_value: integer value for a specific height
+        :return: True, if the pallet is higher than the specific value
+
+        """
         return self.origin_point.z + self.height > height_value
 
     def validate_dimension(self):
+        """
+        Checks all dimensions of the pallet.
+        :return: True, if the pallet has the right length, width and height
+        """
         if not self.validate_rotation():
             if self.validate_length() and self.validate_width():
                 return self.validate_height()
@@ -82,36 +122,63 @@ class SolutionPallet(AbstractPallet):
         return self.validate_height()
 
     def overlaps_base_area(self, other_pallet):
+        """
+        Checks, if the base areas of this and the other pallet overlap or contain each-other
+        :param other_pallet: Another solution pallet
+        :return: True, if the base areas overlap each-other
+        """
         return self != other_pallet and (self.base_area.overlaps(other_pallet.base_area) or self.base_area.contains(
             other_pallet.base_area) or other_pallet.base_area.contains(self.base_area))
 
     def overlaps_front_face(self, other_pallet):
+        """
+        Checks, if the front faces of this and the other pallet overlap or contain each-other
+        :param other_pallet:  Another solution pallet
+        :return: True, if the front faces overlap each-other
+        """
         return self != other_pallet and (
                 self.front_face.overlaps(other_pallet.front_face) or
                 self.front_face.contains(other_pallet.front_face) or other_pallet.front_face.contains(self.front_face))
 
     def touches_front_face(self, other_pallet):
-        return self != other_pallet and self.origin_point.y <= other_pallet.origin_point.y < self.origin_point.y + self.width
+        """
+        Checks, if the front face of the other pallet just touches the self front face
+        :param other_pallet: Another solution pallet
+        :return: True, if the front face of the other pallet touches the self front face
+        """
+        return self != other_pallet and self.origin_point.y <= other_pallet.origin_point.y < \
+            self.origin_point.y + self.width
 
     def overlaps_height(self, other_pallet):
         """
         Method checks only, if the other pallet overlaps from above
-        :param other_pallet: SolutionPallet
+        :param other_pallet: Another solution pallet
         :return: True, if the other pallet overlaps
         """
         diff = other_pallet.origin_point.z - self.origin_point.z
         return 0 <= diff < self.height
 
     def is_other_pallet_stacked(self, other_pallet):
+        """
+        Checks, if the other pallet is stacked on top of the self pallet
+        :param other_pallet:
+        :return: True, if the other pallet is stacked on top of the self pallet
+        """
         return self.overlaps_base_area(other_pallet) and \
                self.get_maxz() == other_pallet.origin_point.z + other_pallet.height
 
     def is_other_pallet_in_front(self, other_pallet):
-        return (self.overlaps_front_face(other_pallet) or self.touches_front_face(other_pallet))and \
-               self.get_maxx() < other_pallet.get_maxx()
+        """
+        Checks, of the other pallet is in front of the self pallet
+        :param other_pallet: Another solution pallet
+        :return: True, if the other pallet is in front of the self pallet
+        """
+        return (self.overlaps_front_face(other_pallet) or self.touches_front_face(other_pallet)) and \
+            self.get_maxx() < other_pallet.get_maxx()
+        # TODO: DEBUG Fall, dass eine gestapelte Palette nicht vorne steht
 
 
-def main():
+def main():  # TODO: importieren mehrerer Lösungen
     try:
         parser = argparse.ArgumentParser(description='Überprüfung der Zulässigkeit einer Lösung.')
         parser.add_argument('--aufgabe', '-a', type=str, required=True,
@@ -230,7 +297,7 @@ def check_lifo(solution_pallets):
             for other_pallet in pallets_to_unload:
                 if pallet.is_other_pallet_stacked(other_pallet) or pallet.is_other_pallet_in_front(other_pallet):
                     raise FeasibilityException(
-                        "Palette im Punkt %s vom Typ %s wird von der Palette %s vom Typ %s gemäß lifo verdeckt." %
+                        "Palette im Punkt %s vom Typ %s wird von der Palette %s vom Typ %s gemäß LIFO verdeckt." %
                         (pallet.origin_point.coords[:], pallet.type.id, other_pallet.origin_point.coords[:],
                          other_pallet.type.id))
             pallets_to_unload.remove(pallet)
@@ -242,3 +309,4 @@ def calculate_minimal_container_length(solution_pallets):
 
 if __name__ == '__main__':
     main()
+# TODO: DOC String
