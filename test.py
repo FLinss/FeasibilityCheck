@@ -142,16 +142,17 @@ def test_right_lifo_two_layers():  # first layer Order 2, second layer Order 1
     validate_solution_default(solution, tasks)
     assert len(solution) == 2
 
+
 def test_right_lifo_multiple_pallets():  # first layer: Pallet type 1, type 2, type 1 / second layer: pallet type 3
     tasks = import_tasks_default(["1,EuroPallet1,2,10,5,10,1,1,1",
                                   "2,EuroPallet2,1,10,5,10,1,1,2",
                                   "3,EuroPallet3,1,5,5,5,1,1,2"])
-    solution = import_solution_default(["1,0,0,0,0", "2,0,5,0,0", "1,0,10,0,0", "3,5,5,10,0" ], tasks)
+    solution = import_solution_default(["1,0,0,0,0", "2,0,5,0,0", "1,0,10,0,0", "3,5,5,10,0"], tasks)
     validate_solution_default(solution, tasks)
     assert len(solution) == 4
 
 
-def test_right_lifo_multiple_pallets2(): #
+def test_right_lifo_multiple_pallets2():  #
     tasks = import_tasks_default(["1,EuroPallet1,1,5,15,40,1,1,1",
                                   "2,EuroPallet2,1,20,15,10,1,1,2",
                                   "3,EuroPallet3,1,10,5,5,1,1,1",
@@ -171,7 +172,7 @@ def test_wrong_lifo_two_layers():  # first layer Order 1, second layer Order 2
         validate_solution_default(solution, tasks)
 
 
-def test_wrong_lifo_two_layers2():  # first layer Order 2, second layer Order 1
+def test_wrong_lifo_two_layers2():  # first layer Order 2, second layer Order 1 (not in front)
     with pytest.raises(FeasibilityException, match=r'.* LIFO .'):
         tasks = import_tasks_default(["1,EuroPallet1,1,10,30,10,1,1,1",
                                       "2,EuroPallet2,1,20,50,10,1,1,2"])
