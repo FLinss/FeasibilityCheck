@@ -251,8 +251,8 @@ def check_count(solution_pallets, tasks):
 def check_dimensions(solution_pallets):
     for pallet in solution_pallets:
         if not pallet.validate_dimension():
-            raise FeasibilityException("Die Palette im Startpunkt %s besitzt falsche Dimensionen." %
-                                       pallet.origin_point.coords[:])
+            raise FeasibilityException("Die Palette im Startpunkt %s vom Typ %s besitzt falsche Dimensionen." %
+                                       (pallet.origin_point.coords[:], pallet.type.id))
 
 
 def check_container_dimensions(solution_pallets, width_value, height_value):
