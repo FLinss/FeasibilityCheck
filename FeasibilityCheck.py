@@ -164,7 +164,7 @@ class SolutionPallet(AbstractPallet):
         :param other_pallet:
         :return: True, if the other pallet is stacked on top of the self pallet
         """
-        return self.overlaps_base_area(other_pallet) and \
+        return self != other_pallet and self.overlaps_base_area(other_pallet) and \
             self.get_maxz() == other_pallet.origin_point.z
 
     def is_other_pallet_in_front(self, other_pallet):
