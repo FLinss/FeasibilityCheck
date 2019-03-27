@@ -77,10 +77,17 @@ def test_stack_right():
     assert len(solution) == 2
 
 
-def test_stack_not_allowed():
+def test_stack_not_allowed1():
     with pytest.raises(FeasibilityException, match=r'.* unzulässigerweise gestapelt.'):
-        tasks = import_tasks_default(["1,EuroPallet1,2,10,10,10,1,0,1"])
-        solution = import_solution_default(["1,0,0,0,0", "1,0,0,15,0"], tasks)
+        tasks = import_tasks_default(["1,EuroPallet1,1,10,10,10,1,1,1", "2,EuroPallet2,1,10,10,10,1,0,1"])
+        solution = import_solution_default(["1,0,0,0,0", "2,0,0,10,0"], tasks)
+        validate_solution_default(solution, tasks)
+
+
+def test_stack_not_allowed2():
+    with pytest.raises(FeasibilityException, match=r'.* falsch gestapelt.'):
+        tasks = import_tasks_default(["1,EuroPallet1,1,10,10,10,1,0,1", "2,EuroPallet2,1,10,10,10,1,1,1"])
+        solution = import_solution_default(["1,0,0,0,0", "2,0,0,10,0"], tasks)
         validate_solution_default(solution, tasks)
 
 

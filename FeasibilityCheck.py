@@ -276,8 +276,9 @@ def check_stacking(solution_pallets):
             if not pallet.is_stackable():
                 raise FeasibilityException("Die Palette in Startpunkt %s vom Typ %s wurde unzulässigerweise gestapelt."
                                            % (pallet.origin_point.coords[:], pallet.type.id))
-            area_for_stack = [i.base_area for i in filter(lambda item: pallet.origin_point.z == item.get_maxz(),
-                                                          pallets_same_base_area)]
+            area_for_stack = [i.base_area for i in
+                              filter(lambda item: pallet.origin_point.z == item.get_maxz() and item.is_stackable(),
+                                     pallets_same_base_area)]
             if not cascaded_union(area_for_stack).contains(pallet.base_area):
                 raise FeasibilityException("Die Palette in Startpunkt %s vom Typ %s wurde falsch gestapelt." %
                                            (pallet.origin_point.coords[:], pallet.type.id))
