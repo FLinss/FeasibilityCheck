@@ -1,4 +1,5 @@
 import argparse
+import os
 import csv
 from shapely.geometry import Point, box
 from shapely.ops import cascaded_union
@@ -175,26 +176,36 @@ class SolutionPallet(AbstractPallet):
         """
         return (self.overlaps_front_face(other_pallet) or self.touches_front_face(other_pallet)) and \
             self.get_maxx() < other_pallet.get_maxx()
-        # TODO: DEBUG Fall, dass eine gestapelte Palette nicht vorne steht
 
 
 def main():  # TODO: importieren mehrerer Lösungen
-    try:
-        parser = argparse.ArgumentParser(description='Überprüfung der Zulässigkeit einer Lösung.')
-        parser.add_argument('--aufgabe', '-a', type=str, required=True,
-                            help='Aufgabedaten als csv-Datei')
-        parser.add_argument('--loesung', '-l', type=str, required=True,
-                            help='Lösungsdaten als csv-Datei')
-        parser.add_argument('--breite', type=int, help='Breite des Containers', default=100)
-        parser.add_argument('--hoehe', type=int, help='Höhe des Containers', default=100)
-        args = parser.parse_args()
-        tasks = import_tasks_by_file(args.aufgabe)
-        solution_pallets = import_solution_by_file(args.loesung, tasks)
-        validate_solution(solution_pallets, tasks, args.breite, args.hoehe)
-        print("Die Lösung ist zulässig.")
-        print("Die minimale Länge beträgt: %s" % calculate_minimal_container_length(solution_pallets))
-    except FeasibilityException as e:
-        print(e)
+    parser = argparse.ArgumentParser(description='Überprüfung der Zulässigkeit einer Lösung.')
+    parser.add_argument('--task', '-t', type=str, required=True,
+                        help='Aufgabedaten als csv-Datei')
+    parser.add_argument('--solution', '-s', type=str, required=True,
+                        help='Lösungsdaten als csv-Datei')
+    parser.add_argument('--width', '-y', type=int, help='Breite (y-Wert) des Containers', default=100)
+    parser.add_argument('--height', '-z', type=int, help='Höhe (z-Wert) des Containers', default=100)
+    args = parser.parse_args()
+    tasks = import_tasks_by_file(args.task)
+    solutions = []
+    if os.path.isdir(os.path.abspath(args.solution)):
+        pass
+        #  for path, files in os.walk(args.solution):
+        #    for filename in files:
+        #        os.path.join(path, filename)
+    else:
+        solutions.append(args.solution)
+    for solution in solutions:
+        try:
+            print(solution)
+            solution_pallets = import_solution_by_file(solution, tasks)
+            validate_solution(solution_pallets, tasks, args.width, args.height)
+            print("Die Lösung ist zulässig.")
+            print("Die minimale Länge beträgt: %s" % calculate_minimal_container_length(solution_pallets))
+        except FeasibilityException as e:
+            print("Die Lösung ist unzulässig.")
+            print(e)
 
 
 def import_tasks_by_file(file):
