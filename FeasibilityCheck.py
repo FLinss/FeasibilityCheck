@@ -209,11 +209,21 @@ def main():  # TODO: importieren mehrerer Lösungen
 
 
 def import_tasks_by_file(file):
+    """
+    Import tasks from a csv file
+    :param file: A csv file
+    :return: Dictionary of all tasks (pallet types)
+    """
     with open(file, newline='') as csvfile:
         return import_tasks(csvfile)
 
 
 def import_tasks(iterable):
+    """
+    Import tasks from an iterable object
+    :param iterable: Iterable object; Field names must be correct
+    :return: Dictionary of all tasks (pallet types)
+    """
     csvreader = csv.DictReader(iterable, delimiter=',', quotechar='|')
     result = dict()
     for row in csvreader:
@@ -225,6 +235,12 @@ def import_tasks(iterable):
 
 
 def import_solution_by_file(file, task_data):
+    """
+    Import solution from a csv file
+    :param file: A csv file
+    :param task_data: Already imported tasks
+    :return: List of solution pallets
+    """
     with open(file, newline='') as csvfile:
         return import_solution(csvfile, task_data)
 
@@ -248,6 +264,13 @@ def import_solution(iterable, task_data):
 
 
 def validate_solution(solution_pallets, tasks, height_value, width_value):
+    """
+    Main function to validate all aspects for a feasible solution
+    :param solution_pallets: List of solution pallets
+    :param tasks: Dictionary of tasks (pallet types)
+    :param height_value: Height of the container
+    :param width_value: Width of the container
+    """
     check_count(solution_pallets, tasks)
     check_dimensions(solution_pallets)
     check_container_dimensions(solution_pallets, height_value, width_value)
@@ -256,6 +279,11 @@ def validate_solution(solution_pallets, tasks, height_value, width_value):
 
 
 def check_count(solution_pallets, tasks):
+    """
+    This function checks, if the quantity of pallet types in the solution is equal to the required number in tasks
+    :param solution_pallets: List of solution pallets
+    :param tasks: Dictionary of tasks (Pallet types)
+    """
     for key in tasks:
         used_pallets = len([i for i in filter(lambda item: item.type.id == tasks[key].id,
                                               solution_pallets)])
@@ -266,6 +294,10 @@ def check_count(solution_pallets, tasks):
 
 
 def check_dimensions(solution_pallets):
+    """
+    All pallets have to be validated regarding their dimensions
+    :param solution_pallets: List of solution pallets.
+    """
     for pallet in solution_pallets:
         if not pallet.validate_dimension():
             raise FeasibilityException("Die Palette im Startpunkt %s vom Typ %s besitzt falsche Dimensionen." %
@@ -273,6 +305,12 @@ def check_dimensions(solution_pallets):
 
 
 def check_container_dimensions(solution_pallets, width_value, height_value):
+    """
+    All pallets have to fit into the container
+    :param solution_pallets: List of solution pallets
+    :param width_value: Width of the container
+    :param height_value: Height of the container
+    """
     for pallet in solution_pallets:
         if pallet.extends_width(width_value) or pallet.extends_height(height_value):
             raise FeasibilityException("Die Palette im Startpunkt %s vom Typ %s überschreitet die Container "
