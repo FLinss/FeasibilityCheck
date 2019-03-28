@@ -1,0 +1,62 @@
+%############################### Beginn der Präambel ###################################################
+\documentclass{scrartcl}
+\usepackage[utf8x]{inputenc}
+\usepackage[ngerman]{babel}
+\usepackage{pifont}
+\usepackage{amssymb}
+
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+
+%############################### Beginn des Textkörpers ################################################
+\begin{document}
+
+\section*{Tests}
+
+Container Dimensionen für Höhe und Breite wurden für die Tests auf 100 Einheiten festgelegt. Die Dimensionen der Palleten variieren zwischen den Tests. Palettenmaße werden falls notwendig zur Erklärung in dem Format \verb|Länge x Breite x Höhe| angegeben. Drehung wird nur bei Bedarf verwendet und auch genannt.
+
+\noindent Der Kopf der Tasks lautet: \verb|Id, Description, Quantity, Length, Width, Height,| \verb|TurningAllowed, StackingAllowed, Order|
+
+
+\noindent Der Kopf der Lösung lautet: \verb|TypId, xPos, yPos, zPos, HTurned|
+
+\xmark\ gekennzeichnete Tests prüfen auf korrekte Exception. \cmark\ gekennzeichnete Tests prüfen auf fehlerfreie Lösung.
+
+\subsection*{Allgemeine Tests}
+
+\begin{description}
+	\item[Test 0 \cmark] Basis Test: 4 Palleten gleichen Typs wurden in 2x2 Anordnung gepackt.
+	\item[Test 1 \xmark] Es wurden nur 3 statt 4 Palleten gepackt.
+	\item[Test 2 \xmark] Eine Palette wurde gedreht, obwohl deren Drehnung nicht zulässig war.
+	\item[Test 3 \xmark] 2 Paletten stehen in der gleichen Ebene und überschneiden sich.
+	\item[Test 4 \xmark] 2 gleiche Paletten haben den gleichen Startpunkt.
+	\item[Test 5 \xmark] Eine Palette überschreitet die Höhe des Containers (Höhe: 40 / Breite: 40).
+	\item[Test 6 \cmark] Eine Palette füllt den Container in Höhe und Breite voll aus (Höhe: 40 / Breite: 40).
+\end{description}
+
+\subsection*{Tests zum Stapeln}
+\begin{description}
+	\item[Test 7 \cmark] 2 gleiche Paletten wurden exakt gestapelt.
+	\item[Test 8 \xmark] Bei zwei gestapelten Paletten durfte die obere nicht gestapelt werden. 
+	\item[Test 9 \xmark] Bei zwei gestapelten Paletten dufte die untere nicht gestapelt werden.
+	\item[Test 10 \xmark] 2 gleiche Paletten wurden exakt übereinander angeordnet, jedoch berühren sie sich nicht. Die obere Palette \glqq schwebt\grqq.
+	\item[Test 11 \xmark] 2 gleiche Paletten wurden mit Überstand gestapelt, sodass die obere nicht komplett auf der unteren Palette aufliegt.
+	\item[Test 12 \cmark] 5 Pakete wurden in drei Schichten gepackt. Die erste Schicht besteht aus zwei gleiche Paletten 10x20x10 (Order 2). Auf beiden liegt eine lange Palette 20x10x10 (Order 1). In der dritten Schicht liegen zwei gleiche Paletten 5x5x10 (Order 1).
+	\item[Test 13 \xmark] 3 Paletten werden in 2 Schichten gestapelt. In der ersten Schicht stehen zwei Paletten 10x10x10 mit einem Zwischenraum von 10 nebeneinander. Auf beiden Paletten wird eine breite Palette 10x30x10 gestapelt, deren Grundfläche so nicht komplett auf Paletten aufliegt.
+	\end{description}
+
+\subsection*{Tests zu LIFO}
+	\begin{description}
+	\item[Test 14 \xmark] Eine Palette Order 2 steht direkt vor einer Palette Order 1
+	\item[Test 15 \cmark] 3 Paletten stehen in einer Ebene. Erst steht eine Palette Order 2. Davor stehen zwei Paletten Order 1 und Order 2.
+	\item[Test 16 \cmark] 2 Paletten Order 1 und Order 2 stehen nebeneinander. Die Palette Order 2 ist länger als die Palette Order 1 als ragt weiter nach hinten.
+	\item[Test 17 \cmark] 2 Paletten stehen übereinander. Die untere ist Order 2 und die obere Order 1.
+	\item[Test 18 \cmark] 4 Paletten werden in 2 Schichten gestapelt. In der ersten Schicht stehen drei Paletten 10x5x10 nebeneinander. Die mittlere Palette ist Order 2. Die äußeren Paletten sind Order 1. Auf der mittleren Palette steht eine Pallete 5x5x5 ebenfalls Order 2.
+	\item[Test 19 \cmark] 5 Paletten werden in 3 Schichten gestapelt. In der ersten Schicht sind zwei Paletten Order 1 und 2 nebeneinander angeordnet. Die Palette 20x15x10 der Order 2 ist länger als die andere Palette (Order 1) 5x15x40. Auf der Palette Order 2 stehen in der zweiten Schicht zwei Paletten Order 1 und Order 2 mit den Maßen 10x5x5. Auf der Palette Order 2 steht in der dritten Ebene noch eine Palette 5x5x5 Order 1.
+	\item[Test 20 \xmark] 2 Paletten stehen übereinander. Die untere ist Order 1 und die obere Order 2.
+	\item[Test 21 \xmark] 2 Paletten stehen übereinander. Die untere ist Order 2 und die obere Order 1. Dabei ist die obere Palette kleiner und steht nicht vorne bündig mit der unteren, sondern ein Stück nach hinten versetzt. Also ist sie nicht erreichbar.
+\end{description}
+
+
+\end{document}
+%############################### Ende des Dokuments ####################################################
