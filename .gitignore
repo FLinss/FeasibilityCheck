@@ -6,3 +6,7 @@ dist
 build
 *.whl
 FeasibilityCheckDaten/
+doc/*.log
+doc/*.aux
+doc/*.pdf
+doc/*.gz
