@@ -178,7 +178,7 @@ class SolutionPallet(AbstractPallet):
             self.get_maxx() < other_pallet.get_maxx()
 
 
-def main():  # TODO: importieren mehrerer Lösungen
+def main():
     parser = argparse.ArgumentParser(description='Überprüfung der Zulässigkeit einer Lösung.')
     parser.add_argument('--task', '-t', type=str, required=True,
                         help='Aufgabedaten als csv-Datei')
@@ -189,11 +189,10 @@ def main():  # TODO: importieren mehrerer Lösungen
     args = parser.parse_args()
     tasks = import_tasks_by_file(args.task)
     solutions = []
-    if os.path.isdir(os.path.abspath(args.solution)):
-        pass
-        #  for path, files in os.walk(args.solution):
-        #    for filename in files:
-        #        os.path.join(path, filename)
+    if os.path.isdir(args.solution):
+        for path, dirs, files in os.walk(args.solution):
+            for filename in files:
+                solutions.append(os.path.join(path, filename))
     else:
         solutions.append(args.solution)
     for solution in solutions:
@@ -202,10 +201,10 @@ def main():  # TODO: importieren mehrerer Lösungen
             solution_pallets = import_solution_by_file(solution, tasks)
             validate_solution(solution_pallets, tasks, args.width, args.height)
             print("Die Lösung ist zulässig.")
-            print("Die minimale Länge beträgt: %s" % calculate_minimal_container_length(solution_pallets))
+            print("Die minimale Länge beträgt: %s \n" % calculate_minimal_container_length(solution_pallets))
         except FeasibilityException as e:
             print("Die Lösung ist unzulässig.")
-            print(e)
+            print(e, "\n")
 
 
 def import_tasks_by_file(file):
