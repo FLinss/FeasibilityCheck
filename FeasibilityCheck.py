@@ -284,7 +284,7 @@ def check_count(solution_pallets, tasks):
     :param tasks: Dictionary of tasks (Pallet types)
     """
     for key in tasks:
-        used_pallets = len([i for i in filter(lambda item: item.type.id == tasks[key].id,
+        used_pallets = len([i for i in filter(lambda item: item.type.id == key,
                                               solution_pallets)])
         if tasks[key].quantity != used_pallets:
             raise FeasibilityException(
