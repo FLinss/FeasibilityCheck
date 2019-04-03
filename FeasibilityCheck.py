@@ -5,7 +5,14 @@ from shapely.geometry import Point, box
 from shapely.ops import cascaded_union
 
 
+HEADER_SOLUTIONS = "TypId,xPos,yPos,zPos,HTurned"
+
+
 class FeasibilityException(Exception):
+    pass
+
+
+class DataException(Exception):
     pass
 
 
@@ -202,7 +209,7 @@ def main():
             validate_solution(solution_pallets, tasks, args.width, args.height)
             print("Die Lösung ist zulässig.")
             print("Die minimale Länge beträgt: %s \n" % calculate_minimal_container_length(solution_pallets))
-        except FeasibilityException as e:
+        except (FeasibilityException, DataException) as e:
             print("Die Lösung ist unzulässig.")
             print(e, "\n")
 
@@ -240,6 +247,10 @@ def import_solution_by_file(file, task_data):
     :param task_data: Already imported tasks
     :return: List of solution pallets
     """
+    with open(file, newline='') as csvfile:
+        line = csvfile.readline().strip()  # strip is necessary, because the first line ends with '\p\n'
+        if line != HEADER_SOLUTIONS:
+            raise DataException("Fehlerhafter Header: %s" % line)
     with open(file, newline='') as csvfile:
         return import_solution(csvfile, task_data)
 
