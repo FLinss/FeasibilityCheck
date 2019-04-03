@@ -10,3 +10,5 @@ doc/*.log
 doc/*.aux
 doc/*.pdf
 doc/*.gz
+doc/Anleitung.tex
+doc/*.JPG
