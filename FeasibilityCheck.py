@@ -56,7 +56,8 @@ class SolutionPallet(AbstractPallet):
                 return True
             else:
                 raise FeasibilityException(
-                    "Die Palette im Startpunkt %s wurde unzulässigerweise gedreht." % self.origin_point.coords[:])
+                    "Die Palette im Startpunkt %s vom Typ %s wurde unzulässigerweise gedreht." % (
+                      self.origin_point.coords[:], self.type.id))
         return False
 
     def is_stackable(self):
