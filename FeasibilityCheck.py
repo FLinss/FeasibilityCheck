@@ -248,12 +248,15 @@ def import_solution_by_file(file, task_data):
     :param task_data: Already imported tasks
     :return: List of solution pallets
     """
-    with open(file, newline='') as csvfile:
-        line = csvfile.readline().strip()  # strip is necessary, because the first line ends with '\p\n'
-        if line != HEADER_SOLUTIONS:
-            raise DataException("Fehlerhafter Header: %s" % line)
-    with open(file, newline='') as csvfile:
-        return import_solution(csvfile, task_data)
+    try:
+        with open(file, newline='') as csvfile:
+            line = csvfile.readline().strip()  # strip is necessary, because the first line ends with '\p\n'
+            if line != HEADER_SOLUTIONS:
+                raise DataException("Fehlerhafter Header: %s" % line)
+        with open(file, newline='') as csvfile:
+            return import_solution(csvfile, task_data)
+    except UnicodeDecodeError:
+        raise DataException("Fehler beim Decoding; vermutlich Binärdatei.")
 
 
 # TODO: zweite Importfunktion mit TypId und zwei Punkten
