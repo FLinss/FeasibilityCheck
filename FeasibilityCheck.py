@@ -192,10 +192,11 @@ def main():
                         help='Aufgabedaten als csv-Datei')
     parser.add_argument('--solution', '-s', type=str, required=True,
                         help='Lösungsdaten als csv-Datei')
-    parser.add_argument('--width', '-y', type=int, help='Breite (y-Wert) des Containers', default=100)
-    parser.add_argument('--height', '-z', type=int, help='Höhe (z-Wert) des Containers', default=100)
     args = parser.parse_args()
-    tasks = import_tasks_by_file(args.task)
+    container_data = import_container_data_by_file(args.task)
+    width = container_data[0]
+    height = container_data[1]
+    tasks = container_data[2]
     solutions = []
     if os.path.isdir(args.solution):
         for path, dirs, files in os.walk(args.solution):
@@ -207,7 +208,7 @@ def main():
         try:
             print(solution)
             solution_pallets = import_solution_by_file(solution, tasks)
-            validate_solution(solution_pallets, tasks, args.width, args.height)
+            validate_solution(solution_pallets, tasks, width, height)
             print("Die Lösung ist zulässig.")
             print("Die minimale Länge beträgt: %s \n" % calculate_minimal_container_length(solution_pallets))
         except (FeasibilityException, DataException) as e:
@@ -215,14 +216,16 @@ def main():
             print(e, "\n")
 
 
-def import_tasks_by_file(file):
+def import_container_data_by_file(file):
     """
-    Import tasks from a csv file
+    Import all data of the container from a csv file
     :param file: A csv file
-    :return: Dictionary of all tasks (pallet types)
+    :return: List of container width, container height and a Dictionary of all tasks (pallet types)
     """
     with open(file, newline='') as csvfile:
-        return import_tasks(csvfile)
+        next(csvfile)
+        container_dimensions = csvfile.readline().strip().split(",")
+        return [int(container_dimensions[0]), int(container_dimensions[1]), import_tasks(csvfile)]
 
 
 def import_tasks(iterable):
