@@ -5,7 +5,7 @@ from shapely.geometry import Point, box
 from shapely.ops import cascaded_union
 
 
-HEADER_SOLUTIONS = "TypId,xPos,yPos,zPos,HTurned"
+HEADER_SOLUTIONS = "Order,xPos,yPos,zPos,HTurned"
 
 
 class FeasibilityException(Exception):
@@ -234,10 +234,10 @@ def import_tasks(iterable):
     csvreader = csv.DictReader(iterable, delimiter=',', quotechar='|')
     result = dict()
     for row in csvreader:
-        result[int(row["Id"])] = PalletType(int(row["Id"]), row["Description"], int(row["Quantity"]),
-                                            int(row["Length"]), int(row["Width"]), int(row["Height"]),
-                                            bool(int(row["TurningAllowed"])), bool(int(row["StackingAllowed"])),
-                                            int(row["Order"]))
+        result[int(row["Order"])] = PalletType(int(row["Order"]), row["Description"], int(row["Quantity"]),
+                                               int(row["Length"]), int(row["Width"]), int(row["Height"]),
+                                               bool(int(row["TurningAllowed"])), bool(int(row["StackingAllowed"])),
+                                               int(row["Group"]))
     return result
 
 
@@ -270,7 +270,7 @@ def import_solution(iterable, task_data):
     csvreader = csv.DictReader(iterable, delimiter=',', quotechar='|')
     result = []
     for row in csvreader:
-        new_solution_pallet_type = task_data[int(row["TypId"])]
+        new_solution_pallet_type = task_data[int(row["Order"])]
         new_solution_pallet = SolutionPallet(new_solution_pallet_type, int(row["xPos"]), int(row["yPos"]),
                                              int(row["zPos"]), int(row["HTurned"]))
         result.append(new_solution_pallet)

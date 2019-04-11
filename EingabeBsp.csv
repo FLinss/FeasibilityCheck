@@ -1,2 +1,4 @@
-Id,Description,Quantity,Length,Width,Height,TurningAllowed,StackingAllowed,Order
+ContainerWidth,ContainerHeight
+2465,2450
+Order,Description,Quantity,Length,Width,Height,TurningAllowed,StackingAllowed,Group
 1,EuroPallet4,4,10,20,30,0,1,1
