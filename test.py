@@ -1,8 +1,8 @@
 from FeasibilityCheck import import_tasks, import_solution, validate_solution, FeasibilityException
 import pytest
 
-HEADER_TASKS = "Id,Description,Quantity,Length,Width,Height,TurningAllowed,StackingAllowed,Order"
-HEADER_SOLUTIONS = "TypId,xPos,yPos,zPos,HTurned"
+HEADER_TASKS = "Order,Description,Quantity,Length,Width,Height,TurningAllowed,StackingAllowed,Group"
+HEADER_SOLUTIONS = "Order,xPos,yPos,zPos,HTurned"
 
 
 def import_tasks_default(tasks):
