@@ -12,3 +12,5 @@ doc/*.pdf
 doc/*.gz
 doc/Anleitung.tex
 doc/*.JPG
+doc/*.out
+doc/Anleitung2.tex
