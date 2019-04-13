@@ -24,14 +24,14 @@ class AbstractPallet:
 
 
 class PalletType(AbstractPallet):
-    def __init__(self, type_id, description, quantity, length, width, height, turning_allowed, stacking_allowed,
-                 order):
+    def __init__(self, order, description, quantity, length, width, height, turning_allowed, stacking_allowed,
+                 group):
         self.description = description
         self.quantity = quantity
         self.turning_allowed = turning_allowed
         self.stacking_allowed = stacking_allowed
+        self.group = group
         self.order = order
-        self.id = type_id
         super(PalletType, self).__init__(length, width, height)
 
 
@@ -57,7 +57,7 @@ class SolutionPallet(AbstractPallet):
             else:
                 raise FeasibilityException(
                     "Die Palette im Startpunkt %s vom Typ %s wurde unzulässigerweise gedreht." % (
-                      self.origin_point.coords[:], self.type.id))
+                      self.origin_point.coords[:], self.type.order))
         return False
 
     def is_stackable(self):
@@ -302,7 +302,7 @@ def check_count(solution_pallets, tasks):
     :param tasks: Dictionary of tasks (Pallet types)
     """
     for key in tasks:
-        used_pallets = len([i for i in filter(lambda item: item.type.id == key,
+        used_pallets = len([i for i in filter(lambda item: item.type.order == key,
                                               solution_pallets)])
         if tasks[key].quantity != used_pallets:
             raise FeasibilityException(
@@ -318,7 +318,7 @@ def check_dimensions(solution_pallets):
     for pallet in solution_pallets:
         if not pallet.validate_dimension():
             raise FeasibilityException("Die Palette im Startpunkt %s vom Typ %s besitzt falsche Dimensionen." %
-                                       (pallet.origin_point.coords[:], pallet.type.id))
+                                       (pallet.origin_point.coords[:], pallet.type.order))
 
 
 def check_container_dimensions(solution_pallets, width_value, height_value):
@@ -332,7 +332,7 @@ def check_container_dimensions(solution_pallets, width_value, height_value):
         if pallet.extends_width(width_value) or pallet.extends_height(height_value):
             raise FeasibilityException("Die Palette im Startpunkt %s vom Typ %s überschreitet die Container "
                                        "Dimensionen."
-                                       % (pallet.origin_point.coords[:], pallet.type.id))
+                                       % (pallet.origin_point.coords[:], pallet.type.order))
 
 
 def check_stacking(solution_pallets):
@@ -346,20 +346,20 @@ def check_stacking(solution_pallets):
         for other_pallet in pallets_same_base_area:
             if pallet.overlaps_height(other_pallet):
                 raise FeasibilityException("Die Paletten in Startpunkt %s Typ: %s und %s  Typ: %s überschneiden sich." %
-                                           (pallet.origin_point.coords[:], pallet.type.id,
-                                            other_pallet.origin_point.coords[:], other_pallet.type.id))
+                                           (pallet.origin_point.coords[:], pallet.type.order,
+                                            other_pallet.origin_point.coords[:], other_pallet.type.order))
         # If the current pallet is not on the ground of the container, it needs a stackable base area:
         if pallet.origin_point.z > 0:
             if not pallet.is_stackable():
                 raise FeasibilityException("Die Palette in Startpunkt %s vom Typ %s wurde unzulässigerweise gestapelt."
-                                           % (pallet.origin_point.coords[:], pallet.type.id))
+                                           % (pallet.origin_point.coords[:], pallet.type.order))
             area_for_stack = [i.base_area for i in
                               filter(lambda item: pallet.origin_point.z == item.get_maxz() and item.is_stackable(),
                                      pallets_same_base_area)]
             # Base area of current pallet must be completely overlapped
             if not cascaded_union(area_for_stack).contains(pallet.base_area):
                 raise FeasibilityException("Die Palette in Startpunkt %s vom Typ %s wurde falsch gestapelt." %
-                                           (pallet.origin_point.coords[:], pallet.type.id))
+                                           (pallet.origin_point.coords[:], pallet.type.order))
 
 
 def check_lifo(solution_pallets):
@@ -371,10 +371,10 @@ def check_lifo(solution_pallets):
     while len(remaining_pallets) > 0:
         # Pallets must be sorted by order (ASC), maximal x coordinate (DESC) and maximal z coordinate (DESC)
         # current Pallets to unload are the first entry of the sorting
-        min_order = min([i.type.order for i in remaining_pallets])
-        pallets_min_order = [i for i in filter(lambda item: item.type.order == min_order, remaining_pallets)]
-        max_x = max([i.get_maxx() for i in pallets_min_order])
-        pallets_max_x = [i for i in filter(lambda item: item.get_maxx() == max_x, pallets_min_order)]
+        min_group = min([i.type.group for i in remaining_pallets])
+        pallets_min_group = [i for i in filter(lambda item: item.type.group == min_group, remaining_pallets)]
+        max_x = max([i.get_maxx() for i in pallets_min_group])
+        pallets_max_x = [i for i in filter(lambda item: item.get_maxx() == max_x, pallets_min_group)]
         max_z = max([i.get_maxz() for i in pallets_max_x])
         pallets_to_unload = [i for i in filter(lambda item: item.get_maxz() == max_z, pallets_max_x)]
         # Check for accessibility: All pallets to unload must be checked, if there is no pallet on top,
@@ -384,8 +384,8 @@ def check_lifo(solution_pallets):
                 if pallet.is_other_pallet_stacked(other_pallet) or pallet.is_other_pallet_in_front(other_pallet):
                     raise FeasibilityException(
                         "Palette im Punkt %s vom Typ %s wird von der Palette %s vom Typ %s gemäß LIFO verdeckt." %
-                        (pallet.origin_point.coords[:], pallet.type.id, other_pallet.origin_point.coords[:],
-                         other_pallet.type.id))
+                        (pallet.origin_point.coords[:], pallet.type.order, other_pallet.origin_point.coords[:],
+                         other_pallet.type.order))
             remaining_pallets.remove(pallet)
 
 
