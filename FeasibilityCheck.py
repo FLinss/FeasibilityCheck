@@ -101,7 +101,7 @@ class SolutionPallet(AbstractPallet):
         :param width_value: integer value for a specific width
         :return: True, if the pallet is wider than the specific value
         """
-        return self.origin_point.z + self.width > width_value
+        return self.origin_point.y + self.width > width_value
 
     def validate_height(self, ):
         """
