@@ -3,6 +3,7 @@ import os
 import csv
 from shapely.geometry import Point, box
 from shapely.ops import cascaded_union
+from datetime import datetime
 
 
 HEADER_SOLUTIONS = "Order,xPos,yPos,zPos,HTurned"
@@ -288,11 +289,22 @@ def validate_solution(solution_pallets, tasks, height_value, width_value):
     :param height_value: Height of the container
     :param width_value: Width of the container
     """
+    timestamps = [datetime.now()]
     check_count(solution_pallets, tasks)
+    timestamps.append(datetime.now())
+    print("Anzahl der Palletten korrekt: %s Sekunden" % (timestamps[-1]-timestamps[-2]).total_seconds())
     check_dimensions(solution_pallets)
+    timestamps.append(datetime.now())
+    print("Palettenmaße und Drehung korrekt: %s Sekunden" % (timestamps[-1]-timestamps[-2]).total_seconds())
     check_container_dimensions(solution_pallets, height_value, width_value)
+    timestamps.append(datetime.now())
+    print("Container Maße eingehalten: %s Sekunden" % (timestamps[-1]-timestamps[-2]).total_seconds())
     check_stacking(solution_pallets)
+    timestamps.append(datetime.now())
+    print("Alle Palette korrekt gestapelt: %s Sekunden" % (timestamps[-1]-timestamps[-2]).total_seconds())
     check_lifo(solution_pallets)
+    timestamps.append(datetime.now())
+    print("Alle Paletten gemäß Lifo erreichbar: %s Sekunden" % (timestamps[-1]-timestamps[-2]).total_seconds())
 
 
 def check_count(solution_pallets, tasks):
