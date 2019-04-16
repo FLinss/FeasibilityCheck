@@ -8,9 +8,9 @@ build
 FeasibilityCheckDaten/
 doc/*.log
 doc/*.aux
-doc/*.pdf
+doc/Tests.pdf
 doc/*.gz
-doc/Anleitung.tex
+doc/.tex
 doc/*.JPG
 doc/*.out
-doc/Anleitung2.tex
+doc/*.tex
