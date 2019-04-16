@@ -56,7 +56,7 @@ class SolutionPallet(AbstractPallet):
                 return True
             else:
                 raise FeasibilityException(
-                    "Die Palette im Startpunkt %s vom Typ %s wurde unzulässigerweise gedreht." % (
+                    "Die Palette im Startpunkt %s von Order %s wurde unzulässigerweise gedreht." % (
                       self.origin_point.coords[:], self.type.order))
         return False
 
@@ -306,7 +306,7 @@ def check_count(solution_pallets, tasks):
                                               solution_pallets)])
         if tasks[key].quantity != used_pallets:
             raise FeasibilityException(
-                "Die Anzahl der Paletten vom Typ %s beträgt %s. Es ist jedoch die Anzahl %s gefordert." %
+                "Die Anzahl der Paletten von Order %s beträgt %s. Es ist jedoch die Anzahl %s gefordert." %
                 (key, used_pallets, tasks[key].quantity))
 
 
@@ -317,7 +317,7 @@ def check_dimensions(solution_pallets):
     """
     for pallet in solution_pallets:
         if not pallet.validate_dimension():
-            raise FeasibilityException("Die Palette im Startpunkt %s vom Typ %s besitzt falsche Dimensionen." %
+            raise FeasibilityException("Die Palette im Startpunkt %s von Order %s besitzt falsche Dimensionen." %
                                        (pallet.origin_point.coords[:], pallet.type.order))
 
 
@@ -330,7 +330,7 @@ def check_container_dimensions(solution_pallets, width_value, height_value):
     """
     for pallet in solution_pallets:
         if pallet.extends_width(width_value) or pallet.extends_height(height_value):
-            raise FeasibilityException("Die Palette im Startpunkt %s vom Typ %s überschreitet die Container "
+            raise FeasibilityException("Die Palette im Startpunkt %s von Order %s überschreitet die Container "
                                        "Dimensionen."
                                        % (pallet.origin_point.coords[:], pallet.type.order))
 
@@ -345,20 +345,22 @@ def check_stacking(solution_pallets):
         pallets_same_base_area = [i for i in filter(lambda item: pallet.overlaps_base_area(item), solution_pallets)]
         for other_pallet in pallets_same_base_area:
             if pallet.overlaps_height(other_pallet):
-                raise FeasibilityException("Die Paletten in Startpunkt %s Typ: %s und %s  Typ: %s überschneiden sich." %
-                                           (pallet.origin_point.coords[:], pallet.type.order,
-                                            other_pallet.origin_point.coords[:], other_pallet.type.order))
+                raise FeasibilityException(
+                    "Die Paletten in Startpunkt %s Order: %s und %s  Order: %s überschneiden sich." %
+                    (pallet.origin_point.coords[:], pallet.type.order,
+                     other_pallet.origin_point.coords[:], other_pallet.type.order))
         # If the current pallet is not on the ground of the container, it needs a stackable base area:
         if pallet.origin_point.z > 0:
             if not pallet.is_stackable():
-                raise FeasibilityException("Die Palette in Startpunkt %s vom Typ %s wurde unzulässigerweise gestapelt."
-                                           % (pallet.origin_point.coords[:], pallet.type.order))
+                raise FeasibilityException(
+                    "Die Palette in Startpunkt %s von Order %s wurde unzulässigerweise gestapelt."
+                    % (pallet.origin_point.coords[:], pallet.type.order))
             area_for_stack = [i.base_area for i in
                               filter(lambda item: pallet.origin_point.z == item.get_maxz() and item.is_stackable(),
                                      pallets_same_base_area)]
             # Base area of current pallet must be completely overlapped
             if not cascaded_union(area_for_stack).contains(pallet.base_area):
-                raise FeasibilityException("Die Palette in Startpunkt %s vom Typ %s wurde falsch gestapelt." %
+                raise FeasibilityException("Die Palette in Startpunkt %s von Order %s wurde falsch gestapelt." %
                                            (pallet.origin_point.coords[:], pallet.type.order))
 
 
@@ -383,7 +385,7 @@ def check_lifo(solution_pallets):
             for other_pallet in remaining_pallets:
                 if pallet.is_other_pallet_stacked(other_pallet) or pallet.is_other_pallet_in_front(other_pallet):
                     raise FeasibilityException(
-                        "Palette im Punkt %s vom Typ %s wird von der Palette %s vom Typ %s gemäß LIFO verdeckt." %
+                        "Palette im Punkt %s von Order %s wird von der Palette %s von Order %s gemäß LIFO verdeckt." %
                         (pallet.origin_point.coords[:], pallet.type.order, other_pallet.origin_point.coords[:],
                          other_pallet.type.order))
             remaining_pallets.remove(pallet)
