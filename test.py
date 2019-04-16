@@ -18,7 +18,7 @@ def import_solution_default(solution, tasks):
 
 
 def validate_solution_default(solution, tasks):
-    validate_solution(solution, tasks, 100, 100)
+    validate_solution(solution, tasks, 100, 100, 0)
 
 
 def test0_basic():
@@ -60,13 +60,13 @@ def test5_check_extend_container_dimensions():
     with pytest.raises(FeasibilityException, match=r'.* überschreitet die Container Dimensionen.'):
         tasks = import_tasks_default(["1,EuroPallet2,1,20,40,40,0,0,1"])
         solution = import_solution_default(["1,0,0,1,0"], tasks)  # extend height of container
-        validate_solution(solution, tasks, 40, 40)
+        validate_solution(solution, tasks, 40, 40, 0)
 
 
 def test6_check_touch_container():
     tasks = import_tasks_default(["1,EuroPallet2,1,20,40,40,0,0,1"])
     solution = import_solution_default(["1,0,0,0,0"], tasks)
-    validate_solution(solution, tasks, 40, 40)
+    validate_solution(solution, tasks, 40, 40, 0)
     assert len(solution) == 1
 
 

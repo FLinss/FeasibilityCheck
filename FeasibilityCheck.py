@@ -177,14 +177,15 @@ class SolutionPallet(AbstractPallet):
         return self != other_pallet and self.overlaps_base_area(other_pallet) and \
             self.get_maxz() == other_pallet.origin_point.z
 
-    def is_other_pallet_in_front(self, other_pallet):
+    def is_other_pallet_in_front(self, other_pallet, allowed_diff):
         """
         Checks, of the other pallet is in front of the self pallet
+        :param allowed_diff: Allowed difference of x between two touching pallets
         :param other_pallet: Another solution pallet
         :return: True, if the other pallet is in front of the self pallet
         """
-        return (self.overlaps_front_face(other_pallet) or self.touches_front_face(other_pallet)) and \
-            self.get_maxx() < other_pallet.get_maxx()
+        return (self.overlaps_front_face(other_pallet) and self.get_maxx() < other_pallet.get_maxx()) or \
+            (self.touches_front_face(other_pallet) and self.get_maxx() + allowed_diff < other_pallet.get_maxx())
 
 
 def main():
@@ -193,6 +194,8 @@ def main():
                         help='Aufgabedaten als csv-Datei')
     parser.add_argument('--solution', '-s', type=str, required=True,
                         help='Lösungsdaten als csv-Datei')
+    parser.add_argument('--parameter', '-p', type=float, required=False, default=0,
+                        help='Parameter für die Erreichbarkeit gestapelter Paletten')
     args = parser.parse_args()
     container_data = import_container_data_by_file(args.task)
     width = container_data[0]
@@ -209,7 +212,7 @@ def main():
         try:
             print(solution)
             solution_pallets = import_solution_by_file(solution, tasks)
-            validate_solution(solution_pallets, tasks, width, height)
+            validate_solution(solution_pallets, tasks, width, height, args.parameter)
             print("Die Lösung ist zulässig.")
             print("Die minimale Länge beträgt: %s \n" % calculate_minimal_container_length(solution_pallets))
         except (FeasibilityException, DataException) as e:
@@ -281,9 +284,10 @@ def import_solution(iterable, task_data):
     return result
 
 
-def validate_solution(solution_pallets, tasks, height_value, width_value):
+def validate_solution(solution_pallets, tasks, height_value, width_value, par_stacking):
     """
     Main function to validate all aspects for a feasible solution
+    :param par_stacking: Parameter for accessibility of stacked pallets
     :param solution_pallets: List of solution pallets
     :param tasks: Dictionary of tasks (pallet types)
     :param height_value: Height of the container
@@ -302,7 +306,7 @@ def validate_solution(solution_pallets, tasks, height_value, width_value):
     check_stacking(solution_pallets)
     timestamps.append(datetime.now())
     print("Alle Palette korrekt gestapelt: %s Sekunden" % (timestamps[-1]-timestamps[-2]).total_seconds())
-    check_lifo(solution_pallets)
+    check_lifo(solution_pallets, par_stacking)
     timestamps.append(datetime.now())
     print("Alle Paletten gemäß Lifo erreichbar: %s Sekunden" % (timestamps[-1]-timestamps[-2]).total_seconds())
 
@@ -376,9 +380,10 @@ def check_stacking(solution_pallets):
                                            (pallet.origin_point.coords[:], pallet.type.order))
 
 
-def check_lifo(solution_pallets):
+def check_lifo(solution_pallets, par_stacking):
     """
     Checks the accessibility for unloading all pallets according to the LIFO condition (Lowest order number at first)
+    :param par_stacking: Parameter for accessibility of stacked pallets
     :param solution_pallets: List of solution pallets
     """
     remaining_pallets = solution_pallets.copy()
@@ -395,7 +400,8 @@ def check_lifo(solution_pallets):
         # directly in front or in a lower layer in front
         for pallet in pallets_to_unload:
             for other_pallet in remaining_pallets:
-                if pallet.is_other_pallet_stacked(other_pallet) or pallet.is_other_pallet_in_front(other_pallet):
+                if pallet.is_other_pallet_stacked(other_pallet) or pallet.is_other_pallet_in_front(other_pallet,
+                                                                                                   par_stacking):
                     raise FeasibilityException(
                         "Palette im Punkt %s von Order %s wird von der Palette %s von Order %s gemäß LIFO verdeckt." %
                         (pallet.origin_point.coords[:], pallet.type.order, other_pallet.origin_point.coords[:],
