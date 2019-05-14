@@ -194,8 +194,9 @@ def main():
                         help='Aufgabedaten als csv-Datei')
     parser.add_argument('--solution', '-s', type=str, required=True,
                         help='Lösungsdaten als csv-Datei')
-    parser.add_argument('--parameter', '-p', type=float, required=False, default=0,
-                        help='Parameter für die Erreichbarkeit gestapelter Paletten')
+    parser.add_argument('--diff', '-d', type=float, required=False, default=0,
+                        help='Erlaubter Versatz bei gestapelten Paletten, sodass die obere Palette '
+                             'noch erreichbar ist.')
     args = parser.parse_args()
     container_data = import_container_data_by_file(args.task)
     width = container_data[0]
@@ -212,7 +213,7 @@ def main():
         try:
             print(solution)
             solution_pallets = import_solution_by_file(solution, tasks)
-            validate_solution(solution_pallets, tasks, width, height, args.parameter)
+            validate_solution(solution_pallets, tasks, width, height, args.diff)
             print("Die Lösung ist zulässig.")
             print("Die minimale Länge beträgt: %s \n" % calculate_minimal_container_length(solution_pallets))
         except (FeasibilityException, DataException) as e:
@@ -284,7 +285,7 @@ def import_solution(iterable, task_data):
     return result
 
 
-def validate_solution(solution_pallets, tasks, height_value, width_value, par_stacking):
+def validate_solution(solution_pallets, tasks, height_value, width_value, par_stacking=0):
     """
     Main function to validate all aspects for a feasible solution
     :param par_stacking: Parameter for accessibility of stacked pallets

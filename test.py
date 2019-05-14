@@ -18,7 +18,7 @@ def import_solution_default(solution, tasks):
 
 
 def validate_solution_default(solution, tasks):
-    validate_solution(solution, tasks, 100, 100, 0)
+    validate_solution(solution, tasks, 100, 100)
 
 
 def test0_basic():
@@ -186,3 +186,11 @@ def test21_wrong_lifo_two_layers2():  # first layer Order 2, second layer Order 
                                       "2,EuroPallet2,1,20,50,10,1,1,2"])
         solution = import_solution_default(["1,0,0,10,0", "2,0,0,0,0"], tasks)
         validate_solution_default(solution, tasks)
+
+
+def test22_right_lifo_two_layers2():
+    tasks = import_tasks_default(["1,EuroPallet1,1,10,30,10,1,1,1",
+                                  "2,EuroPallet2,1,20,50,10,1,1,2"])
+    solution = import_solution_default(["1,0,0,10,0", "2,0,0,0,0"], tasks)
+    validate_solution(solution, tasks, 100, 100, 10)
+    assert len(solution) == 2
